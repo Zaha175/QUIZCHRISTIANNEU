@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MPU Quiz</title>
+<style>
+body { margin: 20px; font-family: sans-serif; }
+.question { margin-bottom: 10px; color: darkblue; font-weight: bold; /* Frage wird dunkelblau und fett */ }
+.answers button { display: block; width: 100%; padding: 10px; margin-bottom: 5px; border: 1px solid #ccc; }
+.answers button.selected { background-color: #e0f2f7; }
+.answers button.correct { background-color: #c8e6c9; }
+.answers button.incorrect { background-color: #ffcdd2; }
+#quiz { display: none; }
+#results { display: none; margin-top: 20px; text-align: center; font-size: 1.2em; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<button onclick="startQuiz()">Quiz starten</button>
+
+<div id="quiz">
+    <div class="question" id="questionText"></div>
+    <div class="answers" id="answerButtons"></div>
+    <button onclick="nextQuestion()">Nächste Frage</button>
+</div>
+
+<div id="results"></div>
+
+<script>
+const qa_data = [
+    {
+"question": "Wieso kommen Sie zur MPU?",
+"answer": "Ich bin hier weil ich die Einhaltung der Regeln nicht im Griff hatte und rückfällig geworden bin. Ich habe wieder an mir gearbeitet und möchte Ihnen zeigen das ich mich geändert habe. Das ist heute meine 5te MPU, 2016 eine Positive und 2022, 3 Negative MPUs."
+},
+{
+"question": "Können Sie die Zweifel der Fahrerlaubnisbehörde an ihrer Fahreignung nachvollziehen?",
+"answer": "Ja, kann ich! Sonst würde ja jeder machen was er will. Ich finde es gerecht, dass ich ein Gutachten machen muss!"
+},
+{
+"question": "Was sagen Sie zu den Delikten? Wie beschreiben Sie ihren früheren Fahrstil?",
+"answer": "Früher waren alle anderen schuld, nur ich nicht, ich dachte früher dass ich ein Pechvogel bin, habe aber im Endeffekt mein eigenes Universum mit meinen eigenen Regeln gemacht.\n\nHabe meine Unpünktlichkeit und meine Ursachen auf dem Verkehr übertragen, habe nur an mich gedacht, die Regeln und andere Menschen in Autos waren mir egal, die waren für mich wie Objekte.\n\nZum Glück ist nichts Schlimmeres passiert. Heute tut mir das leid!"
+},
+{
+"question": "Waren Ihnen früher die Regeln nicht bewusst?",
+"answer": "Doch, ich war aber ein egoistischer und rücksichtloser Fahrer, ich dachte nur an mich selbst und nicht an die Folgen! Es tut mir leid!"
+},
+{
+"question": "Wie oft sind Sie zu schnell gefahren? Wie haben Sie sich denn üblicherweise im Straßenverkehr verhalten.",
+"answer": "Es kam öfters vor, dass ich zu schnell gefahren bin. Auch wenn keine Polizei da war, außer man hat die Polizei gesehen, dann bin ich normal gefahren. Ich war eine Gefährdung für den Straßenverkehr."
+},
+{
+"question": "Warum haben wir so viele Regeln und Gesetze?",
+"answer": "Man braucht Regeln. Sie schützen uns. Ich habe verstanden, dass ich sicher und in Frieden lebe, wenn ich mich an die Regeln halte. Ohne Regeln versinkt die Gesellschaft in Chaos, es gibt nur Chaos."
+},
+{
+"question": "Sind sie ein sicherer Fahrer?",
+"answer": "NEIN, sonst wäre ich nicht bei der MPU, denn richtig gute Autofahrer müssen nicht zur MPU!"
+},
+{
+"question": "Wie schätzen Sie sich als Fahrer damals ein?",
+"answer": "Ich war ein rücksichtsloser und egoistischer Fahrer, ich dachte nur an mich selbst und nicht an die Folgen! Es tut mir leid!"
+},
+{
+"question": "Was ist für Sie ein guter, normaler Autofahrer?",
+"answer": "Ein guter Bürger und Autofahrer, der das Gesetz respektiert, an andere denkt und keine Gefahr mehr ist!"
+},
+{
+"question": "Welcher Anteil der Autofahrer in Deutschland müssen so oft zur MPU wie Sie, Schätzen Sie? 100.000 Personen müssen pro Jahr zur MPU!",
+"answer": "Ich denke das sind ganz, ganz wenige, weniger als ein Prozent!"
+},
+{
+"question": "Wie kam es, dass Sie keinen Unfall hatten?",
+"answer": "Das kann nur Glück gewesen sein!"
+},
+{
+"question": "Wie viele Personen müssen jährlich zur MPU?",
+"answer": "Bei 90.000 Gutachten im Jahr 2019, wegen Alkohol 40 Prozent, Drogen 30 Prozent. Weitere 15% bis 18 %( wegen Punkte), der Rest 10% Straftaten."
+},
+{
+"question": "Wie gefährlich ist es schnell zu fahren? Was kann passieren? Folgen?",
+"answer": "Ich verletze jemanden, ich will auch nicht von jemanden verletzt werden! Bringe mich und andere in Gefahr! Wenn ich zu schnell fahre wo zum Beispiel 100 km/h geschildert ist dann kann der Unfall schlimmer sein weil der Anhalteweg größer ist als er schon ist. Zum Beispiel jemand stirbt oder kommt lebensgefährlich davon! Der Anhalteweg ist bei 50 Km/h 40 Meter, bei 100 Km/h ist er 130 Meter."
+},
+{
+"question": "Warum ist Unfallflucht eine Straftat?",
+"answer": "Weil ich das Gesetz nicht respektiert und Fahrerflucht begangen habe, was strafbar ist, war das dumm und unehrlich von mir. Ich habe einen Unfall verursacht und hätte beinahe jemanden verletzt. Ich möchte auch nicht, dass jemand mich so verletzt oder an der Unfallstelle allein lässt. Es war falsch und gefährlich. Das ist mir heute bewusst und ich bereue es zutiefst."
+},
+{
+"question": "Folgen und Risiken von Unfallflucht?",
+"answer": "Im Falle einer Unfallflucht übernimmt zwar die Vollkaskoversicherung die Kosten, jedoch muss ich danach den Schaden selbst tragen.\n\nFolgen: Schwerverletzte, Verschuldung, Trauma für mich und für andere Verkehrsteilnehmer!"
+},
+{
+"question": "Was ist am 18.08.2012 passiert?",
+"answer": "Fahren ohne Fahrerlaubnis in Tateinheit mit vorsätzlichem Zulassens des Fahrens ohne Fahrerlaubnis 18.08.2012, Fahren ohne Fahrerlaubnis in Tateinheit mit vorsätzlichem Gebrauch eines Fahrzeugs ohne Haftpflichtversicherungsvertrag in 3 Fällen 18.08.2012, Fahren ohne Fahrerlaubnis in Tateinheit mit unerlaubtem Entfernen vom Unfallort 18.08.2012\n\nAls ich jünger war, kaufte ich mit meinen Freunden ein Auto, obwohl keiner von uns einen Führerschein hatte. Wir wollten cool sein und zeigen, dass wir Auto fahren konnten. Wir dachten nicht darüber nach, was passieren könnte, wenn wir ein nicht angemeldetes Auto ohne Führerschein fuhren.\n\nEinmal fuhr ein Freund von mir und wollte angeben. Er legte den Rückwärtsgang ein und fuhr gegen ein Garagentor. Alle erschraken und flohen. Mein Freund nahm das Auto und fuhr weg, um es zu verstecken.\n\nIch fuhr später mit einem anderen Freund, um das Auto woanders zu verstecken. Plötzlich gab uns ein Auto hinter uns Fernlicht - es war die Polizei. Mein Freund bekam Angst und beschleunigte. Wir rasten durch eine Tankstelle, landeten auf der Hauptstraße, prallten gegen einen Bordstein und dann gegen einen Baum.\n\nWir waren beide geschockt. Mein Freund stieg zuerst aus, dann ich. Wir versteckten uns vor der Polizei, weil wir Angst hatten.\n\nRückblickend war das extrem naiv und gedankenlos von uns. Wir hatten Glück, dass niemand verletzt wurde. Es hätte viel schlimmer ausgehen können. Heute habe ich meinen Freundeskreis gewechselt und würde so etwas nie wieder tun. Ich habe gelernt, wie wichtig es ist, verantwortungsbewusst zu handeln und andere nicht in Gefahr zu bringen."
+},
+{
+"question": "Wieso ist das Schwarzfahren strafbar?",
+"answer": "Weil Ich das Gesetz nicht respektiert habe und ohne Fahrerlaubnis gefahren bin was strafbar ist, dass war dumm und unehrlich. Es war für den Moment einfacher. Ich habe einen Unfall gebaut und hätte jemanden verletzen können. Ich will auch nicht, dass man mich auf diese Weise verletzt. Es war falsch und auch gefährlich. Das weiß ich heute. Heute tut mir das leid."
+},
+{
+"question": "Welche Folgen von Schwarzfahren sind Ihnen bekannt?",
+"answer": "Die möglichen Folgen vom Schwarzfahren sind mir deutlich geworden: Könnte auch was Schlimmes passieren, z.B. Schwerverletzte, Gefängnis, keine Haftpflichtversicherung. Ohne gültigen Führerschein muss ich einen Schaden selbst zahlen da ich nicht versichert bin."
+},
+{
+"question": "Warum ist es gefährlich, schwarz zu fahren?",
+"answer": "Als ich ohne Führerschein fuhr, war ich ständig unter Stress und hatte Angst, erwischt zu werden. Dies führte zu Unsicherheit auf der Straße und erhöhte das Risiko eines Unfalls. Jede Begegnung mit der Polizei oder das Hören einer Sirene löste bei mir Zittern und Angst aus."
+},
+{
+"question": "Warum sind Sie wieder, und immer wieder schwarz gefahren?",
+"answer": "Ich habe meine Probleme und die Neigung zur Unpünktlichkeit einfach auf die Straße übertragen, ebenso wie meine Einstellung zum Gesetz; ich habe nach meinen eigenen Regeln gelebt, das war ich damals. Natürlich war mein absichtliches Fahren unehrlich, falsch und illegal, und dafür entschuldige ich mich."
+},
+{
+"question": "Wie oft sind Sie schon ohne Fahrerlaubnis gefahren, ohne aufzufallen und was schließen Sie daraus?",
+"answer": "Ich weiß nicht mehr, wie oft ich das gemacht habe, aber leider bin ich oft ohne Fahrerlaubnis gefahren. Bin öfters zur Arbeit gefahren, privat habe ich eher vermieden. Es war unverantwortlich von mir."
+},
+{
+"question": "Was ist das Problem für die Allgemeinheit und für die Verkehrssicherheit?",
+"answer": "Es kann ein Unfall passieren, aber in erster Linie ist das Problem, dass ich eine Gefahr für andere war."
+},
+{
+"question": "Was will die Gesellschaft von Ihnen? Warum haben wir so viele Regeln und Gesetze?:",
+"answer": "Die Gesellschaft will dass ich mich anpasse dass ich ein guter Bürger und ein gesetztreues Mitglied der Gesellschaft bin und das habe ich damals beim Schwarzfahren nicht gemacht.\n\nSie schützen uns, halten auch die Gesellschaftsordnung aufrecht. Man braucht Regeln, damit man mit den Mitmenschen zusammenleben kann.\n\nOhne Regeln gäbe es ja nur Chaos, wenn jeder fahren würde wie es ihm passt würden viel mehr Unfälle passieren, es würden mehr Leute sterben."
+},
+{
+"question": "Wie wollen Sie heute das Gesetz respektieren?",
+"answer": "Früher hätte ich bei Rot den Zebrastreifen überquert, wenn keine Autos zu sehen waren, heute jedoch warte ich, bis es grün ist, weil ich das Gesetz respektieren will, ich will mich an die Gesetze und Regeln halten!\n\nFrüher fuhr ich selbst ins Krankenhaus, wenn ein Familienmitglied krank war, heute rufe ich jedoch den Krankenwagen.\n\nFrüher dachte ich an andere Verkehrsteilnehmer kaum, doch heute ist mir klar, dass es Menschen in Autos sind, die, genau wie ich, unverletzt bleiben möchten!"
+},
+{
+"question": "Was ist am 24.12. 2018 passiert? ",
+"answer": "Illegales Kraftfahrzeugrennen\n\nAm 24.12.2018, um 1.20 Uhr: verbotenes Kraftfahrzeugrennen (Innerorts ca. 100 km/h bei erlaubten 50 km/h gefahren)\n\nUrsache: Damals war ich mit einem Kollegen unterwegs und wir haben an der Agip gehalten, dass wir was trinken. Wir sind von der Agip Tankstelle losgefahren in Richtung Stadt. Wir fuhren ungefähr gleich nebeneinander und ich hatte mit meinem Kollegen aus dem Fenster während der Fahrt geredet. Ich hatte ihm gesagt, dass wir zu einem Freund fahren sollen. Da habe ich gesehen, dass wir nah an der Ampel waren und hatte zu ihm gesagt, dass wir schnell machen sollen, dass wir durch die grüne Ampel kommen. Da gaben wir beide auf einmal Gas. Hinter meinem Kollegen war ein Bentley und hinter dem Bentley war die Polizei. Als wir beschleunigten, sah das die Polizei und hielt uns sofort an. Es wurde als Kraftfahrzeugrennen eingestuft. Wir hatten schätzungsweise 100 km/h drauf, was auch stimmte. Wir haben aber in diesem Moment nicht auf unsere Fahrleistung geachtet.\n\nBesser machen: Es ist gefährlich, zu schnell zu fahren, weil ich die Kontrolle über mein Fahrzeug verlieren kann und dabei ist zu bedenken, dass ich jemanden verletzen könnte. Gott sei Dank ist nichts passiert. In der Zukunft möchte ich mich an die Regeln halten und sowas nie mehr machen."
+},
+{
+"question": "Was ist am 24.07.2020, Freitag, 11.50 Uhr passiert?: vorsätzliches Fahren ohne Fahrerlaubnis.",
+"answer": "Am 24.07.2020, Freitag, 11.50 Uhr: vorsätzliches Fahren ohne Fahrerlaubnis.\n\nIch wusste, dass ich nicht fahren darf, aber ich musste meine 6 Monate alte Tochter mit Babymilch versorgen. Hatte keinen Kontakt zur Familie, ich wusste nicht an wem ich wenden soll!!!!!! Deshalb habe ich ohne nachzudenken das Auto genommen. Ich habe auf dem Dorf gewohnt und die Busse sind selten gefahren. Ich habe nicht gewusst, was ich machen sollte. Es war für mich sehr schwer, weil ich auch die Arbeit und den Führerschein verloren habe.\n\nIch hätte das Delikt vermeiden können, indem ich den Bus oder das Fahrrad genommen hätte. Aber ich habe wieder zu schnell gehandelt. Es war als Familienvater nicht leicht und ich habe keinen anderen Ausweg gesehen.\n\nIch weiß heute dass dies ein Fehler war. Als Autofahrer bin ich nur der Gesellschaft verpflichtet und sonst niemanden."
+},
+{
+"question": "Was ist am 22.11.2022 passiert?:\n\nDonnerstag, Vorsätzliches Fahren ohne Fahrerlaubnis!",
+"answer": "Vorsätzliches Fahren ohne Fahrerlaubnis\n\nAm 22.11.2022, Donnerstag, wurde ich beim Fahren ohne Führerschein erwischt. Ich wusste, dass es falsch war, aber ich dachte, ich würde nicht erwischt werden.\n\nEgoist ohne Rücksicht auf Folgen\n\nIch war ein Egoist und habe nicht an die Konsequenzen gedacht. Ich war eine Gefahr für alle Verkehrsteilnehmer.\n\nVerkehrssicherheit an erster Stelle\n\nGottseidank ist nichts Schlimmeres passiert. Ich habe verstanden, dass die Verkehrssicherheit an erster Stelle stehen muss."
+},
+{
+"question": "Was haben Sie in der Beratung über die Ursachen des auffälligen Verhaltens gelernt? Ursachen?",
+"answer": "Bin das einzige Kind in der Familie, wir sind wo ich 2 Jahre alt war nach Deutschland gekommen. In der Schule habe ich mich als Außenseiter gefühlt, wollte mich ständig beweisen, wollte wie die anderen sein, wollte auch ein Deutscher sein. Mein Vater war kaum zu Hause, war nur bei der Arbeit, war sehr dominant, es musste immer alles nach seiner Pfeife laufen, hab immer versucht meinem Vater recht zu machen, das er mich mal lobt, es gab kein Lob und keine Anerkennung. Meine Mutter hat zwar alles versucht, sie hatte auch keine Zeit für mich! Mein Selbstwertgefühl hat gelitten, weil mein Vater mich nicht akzeptiert hat. Das war zu viel und das hat mich unzufrieden gemacht. Ich wollte nur Liebe und Anerkennung! „Als Kind fühlte ich mich als Außenseiter. Mein Vater war dominant und gab mir keine Anerkennung. Ich versuchte, ihm zu gefallen, aber es war nie genug. Ich hatte ein geringes Selbstwertgefühl und wollte nur geliebt und akzeptiert werden.“ Und so, habe ich nie über meine Gefühle gesprochen, weil ich nie Schwächen zeigen wollte, wollte nie als schwach angesehen werden! Ich habe mich nie getraut das zu sagen was mir nicht gefällt, habe viele Sachen im Leben gemacht was ich nicht wollte, konnte nie NEIN sagen. Ich verstehe jetzt dass mein Wunsch nach Anerkennung und Zugehörigkeit mein Leben schwer gemacht hat! So habe ich mehr für andere gemacht als für mich selbst. Deswegen wollte ich jedem helfen, jedem gefallen, rechtzeitig ankommen obwohl ich unpünktlich war, ich wollte die Bestätigung und die Anerkennung, ich wollte geliebt werden. Ich konnte nicht Nein sagen, wollte immer alles selber machen und habe nicht über Probleme geredet."
+},
+{
+"question": "Was machen Sie heute anders? Veränderungen im Verkehr: Veränderungen!",
+"answer": "Heute bin ich organisiert und pünktlich:\n\nTermine: Ich rufe an, wenn es knapp wird.\n\n· Morgenroutine: Früher aufstehen, Essen abends vorbereiten, entspannt zur Bushaltestelle.\n\n· Stress: Früher war ich gestresst, heute habe ich mehr Zeit.\n\nFahren:\n\n· Tachometer beachten\n\n· Navigationssystem mit Geschwindigkeitswarnung\n\n· An die Regeln halten\n\n· Konzentriert und verantwortungsbewusst fahren\n\n· Regelmäßige Pausen\n\nMit anderen Augen: Jetzt sehe ich aus dem Bus andere Verkehrsteilnehmer mit anderen Augen. Verkehrsteilnehmer sind Menschen mit Träumen und Zielen. Verkehrssicherheit ist wichtig."
+},
+{
+"question": "Veränderungen im persönlichen Bereich?",
+"answer": "Heute habe ich verstanden:\n\n· Dass ich sicher und in Frieden lebe, wenn ich mich an die Regeln halte.\n\n· Dass ich Zeit und Energie spare.\n\n· Ein besseres Leben führen kann für meine Familie.\n\nIch bin heute entspannter und zufriedener. Ich treibe wieder Sport.\n\nBei der Arbeit bin ich konzentrierter und produktiver. Ich habe mehr Aufgaben übernommen.\n\nMeine Frau, meine Eltern sind stolz auf mich. Außerdem will ich nie wieder jemanden gefährden."
+},
+{
+"question": "Welche Risikosituationen sind Ihrer Meinung nach mit einem Rückfallrisiko verbunden?",
+"answer": "Risikosituation(Termindruck( zum Beispiel Arbeitsanfang, Termin bei Behörden) – eine Art Notfall – in einem solchen Fall rufe ich heute an um zu sagen dass ich später ankomme. Besser, als einen Unfall wegen zu schnell fahren zu haben und dann gar nicht mehr anzukommen. Risikosituation(zum Beispiel Krankenhaus): Ich bekomme einen Anruf, es ist etwas Ernstes passiert, ich muss schnell ins Krankenhaus. Aber was kann ich dort ändern, diese Person wird bereits behandelt."
+},
+{
+"question": "Wie sehen Sie bei Ihnen die Rückfallgefahr?",
+"answer": "Ich will nie wieder sowas machen, aber 100% Garantie kann niemand geben, ich sehe es bei mir aber als Minimal!"
+},
+{
+"question": "Und wieso die Rückfallgefahr minimal?",
+"answer": "· Ich kenne meine Ursachen, ich kenne Risikosituationen, ich habe gelernt Schwächen zu zeigen. Ich habe gelernt, über Probleme zu sprechen und Probleme zu lösen, ich muss nicht mehr jedem Recht machen!\n\n· Ich kann jetzt Nein sagen auch wenn alle auf mich danach böse sind.\n\n· Ich muss mich nicht mehr beweisen so wie früher.\n\n· Lieber komme ich zu spät bevor ich jemanden noch in Gefahr bringe!\n\n· Die Regeln sind ganz wichtig, die sind jetzt für mich ganz, ganz wichtig!"
+},
+{
+"question": "Was haben Sie bei der Vorbereitung gelernt?",
+"answer": "Ich habe offen über meine Delikte gesprochen und verstehe jetzt meine Fehler. Die Rückfallgefahr ist bei mir sehr gering aber 100% Garantie kann niemanden geben. Ich habe verstanden das die Rückfallgefahr immer da sein wird aber von mir aus wird so etwas definitiv nicht mehr vorkommen. Ich konnte die Ursachen für mein damaliges Verhalten erkennen und meine damaliger Wunsch nach Anerkennung und Zugehörigkeit, und auch mein Unpünktlichkeit und Unterordnung. Mit ist klar geworden wie wichtig die Regeln und gesetzt im Straßenverkehr sind. Die sind jetzt für mich ganz wichtig."
+},
+{
+"question": "Was sagen Sie zu dem das Sie wieder eine MPU machen müssen?",
+"answer": "Ich habe jetzt verstanden was für eine Gefahr ich im Verkehr war, habe mein Leben verändert und im Griff! Wäre mir das nicht passiert wer weiß was noch gekommen wäre. Dafür bin ich dankbar!"
+},
+{
+"question": "Meinen Sie, Sie sollten den Führerschein zurückerhalten, wollen Sie unbedingt den Führerschein zurück?",
+"answer": "· Nein, nicht unbedingt, aber es wäre schön wenn ich den Führerschein zurückbekomme."
+},
+{
+"question": "Haben Sie zum Abschluss noch etwas hinzuzufügen?",
+"answer": "· Für das Funktionieren einer Gemeinschaft muss es Regeln geben und die helfen uns allen!"
+}
+];
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function generateAnswers(questionIndex) {
+    if (!qa_data[questionIndex] || !qa_data[questionIndex].answer) {
+        console.error("Ungültige Daten für Frage:", questionIndex);
+        return [];
+    }
+
+    const correctAnswer = qa_data[questionIndex].answer;
+    const wrongAnswers = [];
+
+    // Generiere 2 unterschiedliche falsche Antworten
+    for (let i = 0; i < 2; i++) {
+        let randomIndex = Math.floor(Math.random() * qa_data.length);
+        while (randomIndex === questionIndex || wrongAnswers.includes(qa_data[randomIndex].answer)) {
+            randomIndex = Math.floor(Math.random() * qa_data.length);
+        }
+        wrongAnswers.push(qa_data[randomIndex].answer);
+    }
+
+    const allAnswers = [correctAnswer, ...wrongAnswers];
+    shuffleArray(allAnswers);
+    return allAnswers;
+}
+
+
+let currentQuestionIndex = 0;
+let correctAnswers = 0;
+
+function startQuiz() {
+    document.getElementById('quiz').style.display = 'block';
+    currentQuestionIndex = 0;
+    correctAnswers = 0;
+    showQuestion();
+}
+
+function showQuestion() {
+    const answerButtons = document.getElementById('answerButtons');
+    answerButtons.innerHTML = '';
+
+    if (currentQuestionIndex < qa_data.length) {
+        const question = qa_data[currentQuestionIndex].question;
+        document.getElementById('questionText').textContent = question;
+
+        const answers = generateAnswers(currentQuestionIndex);
+        answers.forEach((answer, index) => {
+            const button = document.createElement('button');
+            button.textContent = answer;
+            button.addEventListener('click', () => checkAnswer(answer, index));
+            answerButtons.appendChild(button);
+        });
+    } else {
+        showResults();
+    }
+}
+
+
+
+function checkAnswer(selectedAnswer, selectedButtonIndex) {
+    const correctAnswer = qa_data[currentQuestionIndex].answer;
+    const answerButtons = document.getElementById('answerButtons').children;
+    
+    for (let i = 0; i < answerButtons.length; i++) {
+        answerButtons[i].disabled = true;
+        if (i === selectedButtonIndex) {
+            if (selectedAnswer === correctAnswer) {
+                answerButtons[i].classList.add('correct');
+                correctAnswers++;
+            } else {
+                answerButtons[i].classList.add('incorrect');
+            }
+            answerButtons[i].classList.add('selected');
+        } else if (answerButtons[i].textContent === correctAnswer) {
+            answerButtons[i].classList.add('correct');
+        }
+    }
+    setTimeout(nextQuestion, 1500);
+}
+
+function nextQuestion() {
+    currentQuestionIndex++;
+    showQuestion();
+}
+
+function showResults() {
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+
+  const correctCount = correctAnswers;
+  const totalQuestions = qa_data.length;
+  let resultMessage = `Sie haben ${correctCount} von ${totalQuestions} Fragen richtig beantwortet. `;
+
+  if (correctCount > 40) {
+    resultMessage += "<span style='color:green;'>Test bestanden!</span>";
+  } else {
+    resultMessage += "<span style='color:red;'>Test nicht bestanden.</span>";
+  }
+
+  document.getElementById('results').innerHTML = resultMessage;
+}
+
+
+</script>
+
+</body>
+</html>
